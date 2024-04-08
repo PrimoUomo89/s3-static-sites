@@ -23,6 +23,10 @@ module.exports = function createApp(hosts, bucketRegion, bucketName, {testHost, 
       host = testHost 
     }
 
+    if (host.startsWith("www.")) {
+      host = host.slice(4)
+    }
+
     if (!hosts.includes(host)) {
       console.error(`Unrecognized Host: ${host}`)
       return
