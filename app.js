@@ -4,7 +4,9 @@ const { GetObjectCommand, HeadObjectCommand, S3Client } = require("@aws-sdk/clie
 let bucket;
 let s3Client;
 
-module.exports = function createApp(hosts, bucketRegion, bucketName, {testHost, refreshUrl= "/refresh"}) {
+const { resolveRedirectLocation } = require("./helpers/redirects.js");
+
+module.exports = function createApp(hosts, bucketRegion, bucketName, {testHost, refreshUrl= "/refresh", redirects = new Map()}) {
 
   s3Client = new S3Client({ region: bucketRegion });
 
@@ -14,6 +16,19 @@ module.exports = function createApp(hosts, bucketRegion, bucketName, {testHost, 
 
   app.get(refreshUrl, async (req, res) => {
     process.exit();
+  })
+
+  // Sites configured with a `redirect` never hit S3; every request to one of
+  // their hostnames is redirected.
+  app.use((req, res, next) => {
+    const host = (testHost || req.hostname || "").toLowerCase();
+    const redirect = redirects.get(host);
+    if (!redirect) {
+      return next();
+    }
+    const location = resolveRedirectLocation(redirect, req.originalUrl);
+    console.log(`${req.ip} == REDIRECT ${redirect.status}: ${host}${req.originalUrl} -> ${location}`)
+    res.redirect(redirect.status, location);
   })
 
   app.get('*', async (req, res) => {
@@ -29,7 +44,7 @@ module.exports = function createApp(hosts, bucketRegion, bucketName, {testHost, 
 
     if (!hosts.includes(host)) {
       console.error(`Unrecognized Host: ${host}`)
-      return
+      return res.status(404).send('Unknown host')
     }
 
     const path = await resolveFinalPath(host, req.path) 

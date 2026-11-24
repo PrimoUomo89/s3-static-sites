@@ -4,7 +4,8 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "node server.js --test",
+    "test": "node --test --test-timeout=20000",
+    "dev": "node server.js --test",
     "start": "node server.js"
   },
   "keywords": [],
