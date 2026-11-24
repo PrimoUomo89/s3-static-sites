@@ -40,10 +40,10 @@ Start with setting up the following:
     - **Redirect-only sites:** add a `redirect` to a site to send every request for its altnames elsewhere instead of serving files from S3. The site still gets an SSL certificate, so `https://` requests redirect too.
       ```json
       {
-          "subject": "old-domain.com",
-          "altnames": ["old-domain.com", "www.old-domain.com"],
+          "subject": "example.com",
+          "altnames": ["example.com", "www.example.com"],
           "redirect": {
-              "to": "https://www.new-domain.com/landing",
+              "to": "https://www.example.org/landing",
               "status": 301,
               "preservePath": false
           }
@@ -51,7 +51,7 @@ Start with setting up the following:
       ```
       - `to` (required): an absolute `http(s)://` URL. `"redirect": "https://..."` is shorthand for the defaults below.
       - `status` (optional, default `301`): one of `301`, `302`, `307`, `308`.
-      - `preservePath` (optional, default `false`): when `true`, the request path and query string are appended to `to` (`/a?b=1` -> `https://www.new-domain.com/a?b=1`).
+      - `preservePath` (optional, default `false`): when `true`, the request path and query string are appended to `to` (`/a?b=1` -> `https://www.example.org/a?b=1`).
       - An invalid `redirect` is logged and ignored rather than stopping the server.
     - **Tip:** anyone who knows `refreshUrl` can restart the server, so set it to a long random path (e.g. `/refresh-3f9c1a...`).
 
