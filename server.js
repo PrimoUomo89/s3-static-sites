@@ -3,6 +3,7 @@
 const createApp = require("./app.js");
 const {BUCKET_NAME, TEST_HOST, BUCKET_REGION} = process.env;
 const { getConfig, updateLocalSites, ensureGreenlockFilesExist } = require("./helpers/config.js");
+const { buildRedirectMap, toGreenlockSites } = require("./helpers/redirects.js");
 
 ( async () => {
 
@@ -17,9 +18,13 @@ const { getConfig, updateLocalSites, ensureGreenlockFilesExist } = require("./he
 
     const testMode = process.argv.includes("--test");
 
-    const app = require("./app.js")(hosts, BUCKET_REGION, BUCKET_NAME, {
-        TEST_HOST: testMode && TEST_HOST ? TEST_HOST : undefined,
-        refreshUrl: config.refreshUrl
+    const redirects = buildRedirectMap(config.sites)
+    redirects.forEach((r, host) => console.log(`Redirect: ${host} -> ${r.to} (${r.status})`))
+
+    const app = createApp(hosts, BUCKET_REGION, BUCKET_NAME, {
+        testHost: testMode && TEST_HOST ? TEST_HOST : undefined,
+        refreshUrl: config.refreshUrl,
+        redirects
     })
 
     if (testMode) {
@@ -36,7 +41,7 @@ const { getConfig, updateLocalSites, ensureGreenlockFilesExist } = require("./he
 
         ensureGreenlockFilesExist(config);
 
-        updateLocalSites(config.sites)
+        updateLocalSites(toGreenlockSites(config.sites))
 
         require("greenlock-express")
             .init({
